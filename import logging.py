@@ -4,9 +4,8 @@ import numpy as np
 import talib
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, CallbackContext, filters
-import numpy.random # Импорт для генерации небольших случайных чисел
-import sqlite3 # Импорт для работы с SQLite
-
+import numpy.random  # Импорт для генерации небольших случайных чисел
+import sqlite3  # Импорт для работы с SQLite
 
 
 # ======================================================================
@@ -28,13 +27,13 @@ TEXTS = {
         'help_message_header': "💡 **Как использовать бота:**\n\n",
         'help_message_calculation_header': "**Для расчета стоимости:**\n",
         'help_message_calculation_text': "Введите количество и пару монет, например: `12 SUI USDT` или `0.5 ETH BTC` или `10 STRK TWT`.\n"
-                                        "- Бот вернет стоимость указанного количества первой монеты во второй валюте.\n"
-                                        "- Для USDT пар, цена будет показана в долларах ($).\n"
-                                        "- Для крипто-крипто пар (например, ETH BTC, STRK TWT), цена будет показана во второй криптовалюте.\n\n",
+        "- Бот вернет стоимость указанного количества первой монеты во второй валюте.\n"
+        "- Для USDT пар, цена будет показана в долларах ($).\n"
+        "- Для крипто-крипто пар (например, ETH BTC, STRK TWT), цена будет показана во второй криптовалюте.\n\n",
         'help_message_calculation_examples_header': "**Примеры запросов для расчета:**\n",
         'help_message_calculation_examples_text': "- `12 SUI USDT` -  узнать стоимость 12 SUI в долларах США.\n"
-                                                 "- `0.5 ETH BTC` - узнать стоимость 0.5 ETH в BTC.\n"
-                                                 "- `10 STRK TWT` - узнать стоимость 10 STRK TWT.\n\n",
+        "- `0.5 ETH BTC` - узнать стоимость 0.5 ETH в BTC.\n"
+        "- `10 STRK TWT` - узнать стоимость 10 STRK TWT.\n\n",
         'help_message_technical_analysis_header': "**Для получения технического анализа (калькулятор) с разными таймфреймами:**\n",
         'help_message_technical_analysis_text': "Просто введите тикер монеты (например, `BTC`, `ETH`, `SUI`). Бот покажет:\n"
                                                   "- Текущую цену (всегда)\n"
@@ -44,18 +43,19 @@ TEXTS = {
                                                   "**Вы можете переключить язык бота на английский или русский, нажав соответствующие кнопки ниже.**\n\n",
         'help_message_technical_analysis_features_header': "**Поддерживаемые функции технического анализа:**\n",
         'help_message_technical_analysis_features_text': "- RSI (Индекс относительной силы)\n"
-                                                          "- MACD (Схождение/Расхождение Скользящих Средних)\n"
-                                                          "- EMA (Экспоненциальная скользящая средняя) - 30 и 100 периодов\n" # Изменено на 30 и 100
-                                                          "- Bollinger Bands (Полосы Боллинджера)\n"
-                                                          "- Stochastic Oscillator (Стохастический осциллятор)\n"
-                                                          "- SMA (Простая скользящая средняя) - 20 и 50 периодов\n"
-                                                          "- Parabolic SAR (Параболическая система SAR)\n"
-                                                          "- ADX (Индекс направленного движения)\n"
-                                                          "- Ichimoku Cloud (Облако Ишимоку)\n"
-                                                          "- Williams %R (Процентный диапазон Вильямса)\n"
-                                                          "- **OBV (On Balance Volume) - Балансовый объем**\n"
-                                                          "- Уровни поддержки и сопротивления\n"
-                                                          "- Уровни Фибоначчи\n",
+        "- MACD (Схождение/Расхождение Скользящих Средних)\n"
+        # Изменено на 30 и 100
+        "- EMA (Экспоненциальная скользящая средняя) - 30 и 100 периодов\n"
+        "- Bollinger Bands (Полосы Боллинджера)\n"
+        "- Stochastic Oscillator (Стохастический осциллятор)\n"
+        "- SMA (Простая скользящая средняя) - 20 и 50 периодов\n"
+        "- Parabolic SAR (Параболическая система SAR)\n"
+        "- ADX (Индекс направленного движения)\n"
+        "- Ichimoku Cloud (Облако Ишимоку)\n"
+        "- Williams %R (Процентный диапазон Вильямса)\n"
+        "- **OBV (On Balance Volume) - Балансовый объем**\n"
+        "- Уровни поддержки и сопротивления\n"
+        "- Уровни Фибоначчи\n",
 
 
 
@@ -79,16 +79,16 @@ TEXTS = {
         'binance_data_unavailable_fallback_fall': "⚠️ Binance data unavailable, using CoinGecko trending as fallback for top 10 falling coins:\n\n",
         'error_fetching_top10_rise': "⚠️ Error fetching top 10 rising coins.",
         'error_fetching_top10_fall': "⚠️ Error fetching top 10 falling coins.",
-        'price_in_usdt': "{:.8f} $",
-        'price_in_crypto': "{:.8f} {}",
+        'price_in_usdt': "{:.5f} $",
+        'price_in_crypto': "{:.5f} {}",
         'error_fetching_price_usdt': "⚠️ Error fetching price for {} in USDT",
         'error_fetching_price_crypto': "⚠️ Error fetching price for {} in {}",
         'invalid_input_amount_coin_coin': "⚠️ Invalid input. Please use format: amount COIN1 COIN2 (e.g., 12 SUI USDT or 10 STRK TWT)",
         'invalid_input_amount_coin_coin_index_error': "⚠️ Invalid input. Please use format: amount COIN1 COIN2 (e.g., 12 SUI USDT or 10 STRK TWT)",
         'error_fetching_data': "⚠️ Ошибка получения данных",
-        'error_invalid_ticker': " ", # НОВОЕ сообщение об ошибке
+        'error_invalid_ticker': " ",  # НОВОЕ сообщение об ошибке
         'price_coin': "💰 **{} Price:** ${:.5f}\n",
-        'change_24h': "📈 24h Change: {:.2f}%\n",
+        'change_24h': "📈 24h Change: {:.5f}%\n",
         'signal_24h': "🔔 **Signal (24h):** {}\n",
         'trend_24h': "📊 **Trend (24h):** {}",
         'button_1h': "1h",
@@ -126,13 +126,13 @@ TEXTS = {
         'help_message_header': "💡 **How to use the bot:**\n\n",
         'help_message_calculation_header': "**For price calculation:**\n",
         'help_message_calculation_text': "Enter the amount and coin pair, for example: `12 SUI USDT` or `0.5 ETH BTC` or `10 STRK TWT`.\n"
-                                        "- The bot will return the value of the specified amount of the first coin in the second currency.\n"
-                                        "- For USDT pairs, the price will be shown in dollars ($).\n"
-                                        "- For crypto-crypto pairs (e.g., ETH BTC, STRK TWT), the price will be shown in the second cryptocurrency.\n\n",
+        "- The bot will return the value of the specified amount of the first coin in the second currency.\n"
+        "- For USDT pairs, the price will be shown in dollars ($).\n"
+        "- For crypto-crypto pairs (e.g., ETH BTC, STRK TWT), the price will be shown in the second cryptocurrency.\n\n",
         'help_message_calculation_examples_header': "**Examples of calculation requests:**\n",
         'help_message_calculation_examples_text': "- `12 SUI USDT` - find out the cost of 12 SUI in US dollars.\n"
-                                                 "- `0.5 ETH BTC` - find out the cost of 0.5 ETH in BTC.\n"
-                                                 "- `10 STRK TWT` - find out the cost of 10 STRK TWT.\n\n",
+        "- `0.5 ETH BTC` - find out the cost of 0.5 ETH in BTC.\n"
+        "- `10 STRK TWT` - find out the cost of 10 STRK TWT.\n\n",
         'help_message_technical_analysis_header': "**To get technical analysis (calculator) with different timeframes:**\n",
         'help_message_technical_analysis_text': "Just enter the coin ticker (e.g., `BTC`, `ETH`, `SUI`). The bot will show:\n"
                                                   "- Current price (always)\n"
@@ -142,18 +142,19 @@ TEXTS = {
                                                   "**You can switch the bot language to English or Russian by pressing the corresponding buttons below.**\n\n",
         'help_message_technical_analysis_features_header': "**Supported technical analysis functions:**\n",
         'help_message_technical_analysis_features_text': "- RSI (Relative Strength Index)\n"
-                                                          "- MACD (Moving Average Convergence/Divergence)\n"
-                                                          "- EMA (Exponential Moving Average) - 30 and 100 periods\n" # Изменено на 30 и 100
-                                                          "- Bollinger Bands\n"
-                                                          "- Stochastic Oscillator\n"
-                                                          "- SMA (Simple Moving Average) - 20 and 50 periods\n"
-                                                          "- Parabolic SAR (Parabolic SAR system)\n"
-                                                          "- ADX (Average Directional Index)\n"
-                                                          "- Ichimoku Cloud\n"
-                                                          "- Williams %R (Williams Percent Range)\n"
-                                                          "- **OBV (On Balance Volume)**\n"
-                                                          "- Support and resistance levels\n"
-                                                          "- Fibonacci Levels\n",
+        "- MACD (Moving Average Convergence/Divergence)\n"
+        # Изменено на 30 и 100
+        "- EMA (Exponential Moving Average) - 30 and 100 periods\n"
+        "- Bollinger Bands\n"
+        "- Stochastic Oscillator\n"
+        "- SMA (Simple Moving Average) - 20 and 50 periods\n"
+        "- Parabolic SAR (Parabolic SAR system)\n"
+        "- ADX (Average Directional Index)\n"
+        "- Ichimoku Cloud\n"
+        "- Williams %R (Williams Percent Range)\n"
+        "- **OBV (On Balance Volume)**\n"
+        "- Support and resistance levels\n"
+        "- Fibonacci Levels\n",
         'help_message_other_functions_header': "**Other functions:**\n",
         'help_message_other_functions_text': "- The 'Top 10 Rise 🚀' and 'Top 10 Fall 📉' sections show the top gainers and losers on Binance.\n"
                                                "- The 'Help' section - current help.\n"
@@ -180,7 +181,7 @@ TEXTS = {
         'invalid_input_amount_coin_coin': "⚠️ Invalid input. Please use format: amount COIN1 COIN2 (e.g., 12 SUI USDT or 10 STRK TWT)",
         'invalid_input_amount_coin_coin_index_error': "⚠️ Invalid input. Please use format: amount COIN1 COIN2 (e.g., 12 SUI USDT or 10 STRK TWT)",
         'error_fetching_data': "⚠️ Error fetching data",
-        'error_invalid_ticker': "{}  ", # NEW error message
+        'error_invalid_ticker': "{}  ",  # NEW error message
         'price_coin': "💰 **{} Price:** ${:.5f}\n",
         'change_24h': "📈 24h Change: {:.5f}%\n",
         'signal_24h': "🔔 **Signal (24h):** {}\n",
@@ -227,6 +228,7 @@ TEXTS = {
 
 DATABASE_NAME = 'crypto_bot.db'  # Имя файла базы данных
 
+
 def create_connection():
     """Создает подключение к базе данных SQLite."""
     conn = None
@@ -236,6 +238,7 @@ def create_connection():
     except sqlite3.Error as e:
         print(f"Database connection error: {e}")
     return conn
+
 
 def create_tables():
     """Создает таблицы в базе данных, если они не существуют."""
@@ -260,6 +263,7 @@ def create_tables():
     else:
         print("Error: Cannot create database connection.")
 
+
 def get_user_setting(user_id, setting_name):
     """Получает настройку пользователя из базы данных."""
     conn = create_connection()
@@ -267,7 +271,8 @@ def get_user_setting(user_id, setting_name):
     if conn is not None:
         try:
             cursor = conn.cursor()
-            cursor.execute(f"SELECT {setting_name} FROM user_settings WHERE user_id=?", (user_id,))
+            cursor.execute(
+                f"SELECT {setting_name} FROM user_settings WHERE user_id=?", (user_id,))
             row = cursor.fetchone()
             if row:
                 setting_value = row[0]
@@ -277,6 +282,7 @@ def get_user_setting(user_id, setting_name):
             conn.close()
     return setting_value
 
+
 def set_user_setting(user_id, setting_name, setting_value):
     """Устанавливает настройку пользователя в базе данных."""
     conn = create_connection()
@@ -284,14 +290,17 @@ def set_user_setting(user_id, setting_name, setting_value):
         try:
             cursor = conn.cursor()
             # Сначала проверяем, есть ли уже запись для user_id
-            cursor.execute("SELECT user_id FROM user_settings WHERE user_id=?", (user_id,))
+            cursor.execute(
+                "SELECT user_id FROM user_settings WHERE user_id=?", (user_id,))
             existing_user = cursor.fetchone()
             if existing_user:
                 # Если пользователь уже есть, обновляем настройку
-                cursor.execute(f"UPDATE user_settings SET {setting_name}=? WHERE user_id=?", (setting_value, user_id))
+                cursor.execute(
+                    f"UPDATE user_settings SET {setting_name}=? WHERE user_id=?", (setting_value, user_id))
             else:
                 # Если пользователя нет, создаем новую запись с настройкой
-                cursor.execute(f"INSERT INTO user_settings (user_id, {setting_name}) VALUES (?, ?)", (user_id, setting_value))
+                cursor.execute(
+                    f"INSERT INTO user_settings (user_id, {setting_name}) VALUES (?, ?)", (user_id, setting_value))
             conn.commit()
         except sqlite3.Error as e:
             print(f"Database set setting error: {e}")
@@ -299,12 +308,16 @@ def set_user_setting(user_id, setting_name, setting_value):
             conn.close()
 
 # Функция для получения языка пользователя (пример использования get_user_setting)
+
+
 def get_user_language(user_id):
     """Получает язык пользователя из базы данных, по умолчанию 'ru'."""
     language = get_user_setting(user_id, 'language')
-    return language if language else 'ru' # По умолчанию русский
+    return language if language else 'ru'  # По умолчанию русский
 
 # Функция для установки языка пользователя (пример использования set_user_setting)
+
+
 def set_user_language(user_id, language):
     """Устанавливает язык пользователя в базе данных."""
     set_user_setting(user_id, 'language', language)
@@ -336,7 +349,8 @@ def get_binance_price(coin_id: str):
         ticker = response.json()
         return ticker
     except requests.exceptions.RequestException as e:
-        logger.error(f"Binance API error (get_binance_price for {coin_id}): {e}")
+        logger.error(
+            f"Binance API error (get_binance_price for {coin_id}): {e}")
         return None
 
 
@@ -360,7 +374,8 @@ def get_binance_price_direct(coin1_id: str, coin2_id: str):
         price_data = response.json()
         return float(price_data['price'])
     except requests.exceptions.RequestException as e:
-        logger.error(f"Binance API error (get_binance_price_direct for {coin1_id}-{coin2_id}): {e}")
+        logger.error(
+            f"Binance API error (get_binance_price_direct for {coin1_id}-{coin2_id}): {e}")
         return None
 
 
@@ -392,7 +407,8 @@ def get_binance_top_movers(limit=10, sort_by='priceChangePercent', ascending=Fal
         sorted_tickers = sorted(
             usdt_tickers,
             key=lambda x: float(x[sort_by]),
-            reverse=not ascending  # ascending=False for рост (по убыванию), ascending=True для падения (по возрастанию)
+            # ascending=False for рост (по убыванию), ascending=True для падения (по возрастанию)
+            reverse=not ascending
         )
 
         top_movers = []
@@ -435,10 +451,12 @@ def get_coingecko_price(coin_id: str, vs_currency='usd'):
         if coin_id in data and vs_currency in data[coin_id]:
             return float(data[coin_id][vs_currency])
         else:
-            logger.warning(f"CoinGecko API: Price not found for {coin_id} in {vs_currency}")
+            logger.warning(
+                f"CoinGecko API: Price not found for {coin_id} in {vs_currency}")
             return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"CoinGecko API error (get_coingecko_price for {coin_id}): {e}")
+        logger.error(
+            f"CoinGecko API error (get_coingecko_price for {coin_id}): {e}")
         return None
 
 
@@ -458,12 +476,13 @@ def get_coingecko_coin_id_by_symbol(symbol: str):
         response.raise_for_status()
         coins_list = response.json()
         for coin in coins_list:
-            if coin['symbol'].upper() == symbol.upper(): # Сравниваем символы в верхнем регистре
+            if coin['symbol'].upper() == symbol.upper():  # Сравниваем символы в верхнем регистре
                 return coin['id']
         logger.warning(f"CoinGecko API: Coin ID not found for symbol {symbol}")
         return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"CoinGecko API error (get_coingecko_coin_id_by_symbol for {symbol}): {e}")
+        logger.error(
+            f"CoinGecko API error (get_coingecko_coin_id_by_symbol for {symbol}): {e}")
         return None
 
 
@@ -483,7 +502,8 @@ def get_trending_coins():
         return [
             (coin["item"]["symbol"].upper(),
              coin["item"]["name"],
-             float(coin["item"]["data"]["price"].replace(',', '')),  # Convert to float and remove commas
+             # Convert to float and remove commas
+             float(coin["item"]["data"]["price"].replace(',', '')),
              float(coin["item"]["data"]["price_change_percentage_24h"]["usd"]))
             for coin in data["coins"][:10]  # Get top 10 trending coins
         ]
@@ -525,84 +545,105 @@ async def handle_top10_rise(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
 
-    top_risers = get_binance_top_movers(sort_by='priceChangePercent', ascending=False)
+    top_risers = get_binance_top_movers(
+        sort_by='priceChangePercent', ascending=False)
 
     if not top_risers:
-        top_risers = get_coingecko_top_movers_fallback(sort_by_index=3, ascending=False)
+        top_risers = get_coingecko_top_movers_fallback(
+            sort_by_index=3, ascending=False)
         if not top_risers:
             await query.edit_message_text(TEXTS[context.user_data['language']]['error_fetching_top10_rise'])
             return
         else:
-            message = TEXTS[context.user_data['language']]['binance_data_unavailable_fallback_rise']
+            message = TEXTS[context.user_data['language']
+                            ]['binance_data_unavailable_fallback_rise']
     else:
         message = TEXTS[context.user_data['language']]['top10_rise_header']
 
     for coin in top_risers:
         coin_id, coin_name, price, change_24h = coin
-        message += (f"📈 **{coin_name} ({coin_id})**: ${price:.4f}\n"
-                    f"📈 24h Change: {change_24h:+.4f}%\n\n")
+        message += (f"📈 **{coin_name} ({coin_id})**: ${price:.5f}\n"
+                    f"📈 24h Change: {change_24h:+.5f}%\n\n")
 
     # ===  Добавляем клавиатуру главного меню ===
     keyboard = [
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     # ===  Клавиатура главного меню добавлена ===
 
-    await query.edit_message_text(message, parse_mode="Markdown", reply_markup=reply_markup) #  Добавляем reply_markup
+    # Добавляем reply_markup
+    await query.edit_message_text(message, parse_mode="Markdown", reply_markup=reply_markup)
+
 
 async def handle_top10_fall(update: Update, context: CallbackContext):
     """Обработчик команды 'Топ 10 падения'."""
     query = update.callback_query
     await query.answer()
 
-    top_fallers = get_binance_top_movers(sort_by='priceChangePercent', ascending=True)
+    top_fallers = get_binance_top_movers(
+        sort_by='priceChangePercent', ascending=True)
 
     if not top_fallers:
-        top_fallers = get_coingecko_top_movers_fallback(sort_by_index=3, ascending=True)
+        top_fallers = get_coingecko_top_movers_fallback(
+            sort_by_index=3, ascending=True)
         if not top_fallers:
             await query.edit_message_text(TEXTS[context.user_data['language']]['error_fetching_top10_fall'])
             return
         else:
-            message = TEXTS[context.user_data['language']]['binance_data_unavailable_fallback_fall']
+            message = TEXTS[context.user_data['language']
+                            ]['binance_data_unavailable_fallback_fall']
     else:
         message = TEXTS[context.user_data['language']]['top10_fall_header']
 
     for coin in top_fallers:
         coin_id, coin_name, price, change_24h = coin
-        message += (f"📉 **{coin_name} ({coin_id})**: ${price:.5f}\n"
-                    f"📉 24h Change: {change_24h:+.5f}%\n\n")
+        message += (f"📉 **{coin_name} ({coin_id})**: ${price:.4f}\n"
+                    f"📉 24h Change: {change_24h:+.4f}%\n\n")
 
     # ===  Добавляем клавиатуру главного меню ===
     keyboard = [
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     # ===  Клавиатура главного меню добавлена ===
 
-    await query.edit_message_text(message, parse_mode="Markdown", reply_markup=reply_markup) #  Добавляем reply_markup
+    # Добавляем reply_markup
+    await query.edit_message_text(message, parse_mode="Markdown", reply_markup=reply_markup)
 
 
 # ======================================================================
@@ -618,18 +659,21 @@ def calculate_indicators(prices, high, low, close, volume):
 
     obv_values = talib.OBV(np.array(close), np.array(volume))
 
-    period_for_swing = 20 #  Настраиваемый период для определения Swing High/Low
+    period_for_swing = 20  # Настраиваемый период для определения Swing High/Low
 
-    swing_high = np.max(high[-period_for_swing:]) if len(high) >= period_for_swing else None # Swing High за период
-    swing_low = np.min(low[-period_for_swing:]) if len(low) >= period_for_swing else None   # Swing Low за период
-
+    # Swing High за период
+    swing_high = np.max(high[-period_for_swing:]
+                        ) if len(high) >= period_for_swing else None
+    # Swing Low за период
+    swing_low = np.min(low[-period_for_swing:]
+                       ) if len(low) >= period_for_swing else None
 
     indicators = {
         'rsi': talib.RSI(np.array(prices), timeperiod=14)[-1],
         'macd': talib.MACD(np.array(prices))[0][-1],
         'signal': talib.MACD(np.array(prices))[1][-1],
-        'ema_30': talib.EMA(np.array(prices), 30)[-1], # Изменено на 30
-        'ema_100': talib.EMA(np.array(prices), 100)[-1], # Изменено на 100
+        'ema_30': talib.EMA(np.array(prices), 30)[-1],  # Изменено на 30
+        'ema_100': talib.EMA(np.array(prices), 100)[-1],  # Изменено на 100
         'upper_bb': talib.BBANDS(np.array(prices), timeperiod=20)[0][-1],
         'lower_bb': talib.BBANDS(np.array(prices), timeperiod=20)[2][-1],
         'stoch_k': talib.STOCH(np.array(high), np.array(low), np.array(close))[0][-1],
@@ -641,7 +685,7 @@ def calculate_indicators(prices, high, low, close, volume):
         'willr': talib.WILLR(np.array(high), np.array(low), np.array(close), timeperiod=14)[-1],
         'obv': obv_values[-1],
         'obv_previous': obv_values[-2] if len(obv_values) > 1 else None,
-        'swing_high': swing_high, # Добавляем Swing High в словарь индикаторов
+        'swing_high': swing_high,  # Добавляем Swing High в словарь индикаторов
         'swing_low': swing_low,   # Добавляем Swing Low в словарь индикаторов
     }
     return indicators
@@ -673,7 +717,8 @@ def calculate_adx(high, low, close, period=14):
     """
     if len(close) < period:
         return None
-    adx = talib.ADX(np.array(high), np.array(low), np.array(close), timeperiod=period)[-1]
+    adx = talib.ADX(np.array(high), np.array(
+        low), np.array(close), timeperiod=period)[-1]
     return adx
 
 
@@ -683,40 +728,50 @@ def calculate_ichimoku(high, low, close):
     """
     if len(close) < 52:  # Минимум для расчета Ichimoku
         return None, None, None
-    conversion_line = (talib.MAX(np.array(high), timeperiod=9) + talib.MIN(np.array(low), timeperiod=9)) / 2
-    base_line = (talib.MAX(np.array(high), timeperiod=26) + talib.MIN(np.array(low), timeperiod=26)) / 2
+    conversion_line = (talib.MAX(np.array(high), timeperiod=9) +
+                       talib.MIN(np.array(low), timeperiod=9)) / 2
+    base_line = (talib.MAX(np.array(high), timeperiod=26) +
+                 talib.MIN(np.array(low), timeperiod=26)) / 2
     leading_span_a = (conversion_line + base_line) / 2
-    leading_span_b = (talib.MAX(np.array(high), timeperiod=52) + talib.MIN(np.array(low), timeperiod=52)) / 2
+    leading_span_b = (talib.MAX(np.array(high), timeperiod=52) +
+                      talib.MIN(np.array(low), timeperiod=52)) / 2
     return conversion_line[-1], base_line[-1], leading_span_b[-1]
 
 
-def determine_trend(ema_30, ema_100, current_price, previous_price, context): #  ОБНОВЛЕНО: Добавлен context
+# ОБНОВЛЕНО: Добавлен context
+def determine_trend(ema_30, ema_100, current_price, previous_price, context):
     """
     Определяет тренд на основе скользящих средних и изменения цены.
     """
     trend_text = ""
     strength_text = ""
 
-    if ema_30 and ema_100: # Изменено на ema_30 и ema_100
-        if ema_30 > ema_100: # Изменено на ema_30 и ema_100
-            trend_text += TEXTS[context.user_data['language']]['trend_ascending']
-        elif ema_30 < ema_100: # Изменено на ema_30 и ema_100
-            trend_text += TEXTS[context.user_data['language']]['trend_descending']
+    if ema_30 and ema_100:  # Изменено на ema_30 и ema_100
+        if ema_30 > ema_100:  # Изменено на ema_30 и ema_100
+            trend_text += TEXTS[context.user_data['language']
+                                ]['trend_ascending']
+        elif ema_30 < ema_100:  # Изменено на ema_30 и ema_100
+            trend_text += TEXTS[context.user_data['language']
+                                ]['trend_descending']
         else:
-            trend_text += TEXTS[context.user_data['language']]['trend_sideways']
+            trend_text += TEXTS[context.user_data['language']
+                                ]['trend_sideways']
 
     if current_price and previous_price:
         price_change = current_price - previous_price
         if abs(price_change) > 0.05 * current_price:
-            strength_text = TEXTS[context.user_data['language']]['trend_strength_strong']
+            strength_text = TEXTS[context.user_data['language']
+                                  ]['trend_strength_strong']
         else:
-            strength_text = TEXTS[context.user_data['language']]['trend_strength_weak']
+            strength_text = TEXTS[context.user_data['language']
+                                  ]['trend_strength_weak']
         if price_change > 0:
             trend_text += " 📈"
         else:
             trend_text += " 📉"
 
     return trend_text + strength_text if trend_text else TEXTS[context.user_data['language']]['trend_sideways']
+
 
 def calculate_fibonacci_levels(min_price, max_price):
     """
@@ -735,13 +790,14 @@ def calculate_fibonacci_levels(min_price, max_price):
     return levels
 
 
-def get_trading_signal(coin_id: str, interval='1d', context=None): # Добавлено context
+def get_trading_signal(coin_id: str, interval='1d', context=None):  # Добавлено context
     """
     Определяет торговый сигнал на основе технических индикаторов и уровней Фибоначчи.
     """
     hist_data = get_historical_data(coin_id, interval)
     if not hist_data or len(hist_data) < 50:
-        return TEXTS[context.user_data['language']]['error_invalid_ticker'].format(coin_id), "" #  Измененное сообщение об ошибке
+        # Измененное сообщение об ошибке
+        return TEXTS[context.user_data['language']]['error_invalid_ticker'].format(coin_id), ""
 
     high = [h for h, _, _, _ in hist_data]
     low = [l for _, l, _, _ in hist_data]
@@ -751,15 +807,18 @@ def get_trading_signal(coin_id: str, interval='1d', context=None): # Добав�
 
     indicators = calculate_indicators(prices, high, low, close, volume)
     support, resistance = calculate_support_resistance(prices)
-     # === Расчет уровней Фибоначчи ===
-    period_for_fibonacci_swing = 30 #  Настраиваемый период для Swing High/Low для Фибоначчи
-    swing_high_fib = np.max(high[-period_for_fibonacci_swing:]) if len(high) >= period_for_fibonacci_swing else None
-    swing_low_fib = np.min(low[-period_for_fibonacci_swing:]) if len(low) >= period_for_fibonacci_swing else None
+    # === Расчет уровней Фибоначчи ===
+    # Настраиваемый период для Swing High/Low для Фибоначчи
+    period_for_fibonacci_swing = 30
+    swing_high_fib = np.max(high[-period_for_fibonacci_swing:]
+                            ) if len(high) >= period_for_fibonacci_swing else None
+    swing_low_fib = np.min(low[-period_for_fibonacci_swing:]
+                           ) if len(low) >= period_for_fibonacci_swing else None
     fibonacci_levels = {}
     if swing_high_fib and swing_low_fib:
-        fibonacci_levels = calculate_fibonacci_levels(swing_low_fib, swing_high_fib)
+        fibonacci_levels = calculate_fibonacci_levels(
+            swing_low_fib, swing_high_fib)
     # === Конец расчета уровней Фибоначчи ===
-
 
     buy_signals = sell_signals = 0
 
@@ -768,9 +827,10 @@ def get_trading_signal(coin_id: str, interval='1d', context=None): # Добав�
         buy_signals += 1
     elif close[-1] >= indicators['upper_bb']:
         sell_signals += 1
-    if indicators['stoch_k'] < 25: # Stochastic K перепродан (изменено на 25)
+    if indicators['stoch_k'] < 25:  # Stochastic K перепродан (изменено на 25)
         buy_signals += 1
-    elif indicators['stoch_k'] > 75: # Stochastic K перекуплен (изменено на 75)
+    # Stochastic K перекуплен (изменено на 75)
+    elif indicators['stoch_k'] > 75:
         sell_signals += 1
     if indicators['sma_20'] > indicators['sma_50']:
         buy_signals += 1
@@ -790,17 +850,17 @@ def get_trading_signal(coin_id: str, interval='1d', context=None): # Добав�
             buy_signals += 1
         elif close[-1] >= resistance * 0.995:
             sell_signals += 1
-    if indicators['rsi'] > 65: # RSI перекуплен (изменено на 65)
+    if indicators['rsi'] > 65:  # RSI перекуплен (изменено на 65)
         sell_signals += 1
-    elif indicators['rsi'] < 35: # RSI перепродан (изменено на 35)
+    elif indicators['rsi'] < 35:  # RSI перепродан (изменено на 35)
         buy_signals += 1
     if indicators['macd'] > indicators['signal']:
         buy_signals += 1
     elif indicators['macd'] < indicators['signal']:
         sell_signals += 1
-    if indicators['ema_30'] > indicators['ema_100']: # Изменено на ema_30 и ema_100
+    if indicators['ema_30'] > indicators['ema_100']:  # Изменено на ema_30 и ema_100
         buy_signals += 1
-    elif indicators['ema_30'] < indicators['ema_100']: # Изменено на ema_30 и ema_100
+    elif indicators['ema_30'] < indicators['ema_100']:  # Изменено на ema_30 и ema_100
         sell_signals += 1
     if indicators['willr'] < -80:
         buy_signals += 1
@@ -825,7 +885,8 @@ def get_trading_signal(coin_id: str, interval='1d', context=None): # Добав�
         buy_signals += 1
 
     # Ichimoku
-    conversion_line, base_line, leading_span_b = calculate_ichimoku(high, low, close)
+    conversion_line, base_line, leading_span_b = calculate_ichimoku(
+        high, low, close)
     if conversion_line and base_line and leading_span_b:
         if close[-1] > conversion_line and close[-1] > base_line:
             buy_signals += 1
@@ -836,17 +897,20 @@ def get_trading_signal(coin_id: str, interval='1d', context=None): # Добав�
     if fibonacci_levels:
         current_price = close[-1]
         for level_name, level_value in fibonacci_levels.items():
-            if level_name in ['23.6%', '38.2%', '50.0%']: #  Рассмотрим первые 3 уровня как наиболее значимые поддержки/сопротивления
-                if current_price >= level_value * 0.995 and current_price <= level_value * 1.005: # Цена вблизи уровня Фибоначчи (допуск 0.5%)
-                    if level_value < swing_high_fib and level_value > swing_low_fib: # Уровень находится между Swing High и Swing Low
-                        if current_price < level_value: # Цена ниже уровня - потенциальное сопротивление
+            # Рассмотрим первые 3 уровня как наиболее значимые поддержки/сопротивления
+            if level_name in ['23.6%', '38.2%', '50.0%']:
+                # Цена вблизи уровня Фибоначчи (допуск 0.5%)
+                if current_price >= level_value * 0.995 and current_price <= level_value * 1.005:
+                    # Уровень находится между Swing High и Swing Low
+                    if level_value < swing_high_fib and level_value > swing_low_fib:
+                        if current_price < level_value:  # Цена ниже уровня - потенциальное сопротивление
                             sell_signals += 1
-                        else: # Цена выше уровня - потенциальная поддержка
+                        else:  # Цена выше уровня - потенциальная поддержка
                             buy_signals += 1
     # --- КОНЕЦ БЛОКА СИГНАЛОВ ФИБОНАЧЧИ ---
 
-
-    signal_text = TEXTS[context.user_data['language']]['signal_buy'] if buy_signals > sell_signals else TEXTS[context.user_data['language']]['signal_sell'] if sell_signals > buy_signals else TEXTS[context.user_data['language']]['signal_hold']
+    signal_text = TEXTS[context.user_data['language']]['signal_buy'] if buy_signals > sell_signals else TEXTS[context.user_data['language']
+                                                                                                              ]['signal_sell'] if sell_signals > buy_signals else TEXTS[context.user_data['language']]['signal_hold']
 
     trend = determine_trend(
         indicators['ema_30'],  # Изменено на ema_30
@@ -856,9 +920,7 @@ def get_trading_signal(coin_id: str, interval='1d', context=None): # Добав�
         context  # ДОБАВЛЕНО: Передача context
     )
 
-
-
-    return signal_text, trend, fibonacci_levels # Возвращаем fibonacci_levels
+    return signal_text, trend, fibonacci_levels  # Возвращаем fibonacci_levels
 
 
 def get_historical_data(coin_id: str, interval='1d'):
@@ -891,7 +953,8 @@ def get_historical_data(coin_id: str, interval='1d'):
             for c in hist_data_json
         ]
     except requests.exceptions.RequestException as e:
-        logger.error(f"Historical data error (get_historical_data for {coin_id}, interval {interval}): {e}")
+        logger.error(
+            f"Historical data error (get_historical_data for {coin_id}, interval {interval}): {e}")
         return None
 
 
@@ -919,29 +982,36 @@ async def handle_text(update: Update, context: CallbackContext):
         price = float(price_data['lastPrice'])
         change_24h = float(price_data['priceChangePercent'])
 
-        signal_info = get_trading_signal(coin_id, context=context) # Передаем context в get_trading_signal
+        # Передаем context в get_trading_signal
+        signal_info = get_trading_signal(coin_id, context=context)
 
-        if isinstance(signal_info, tuple) and len(signal_info) == 3: # проверяем, что вернулось 3 значения
-            signal_text, trend_text, fibonacci_levels = signal_info # распаковываем значения, если их 3
-        else: # если вернулось не 3 значения (ошибка)
-            signal_text, trend_text = signal_info if isinstance(signal_info, tuple) else (TEXTS[context.user_data['language']]['error_fetching_data'], "") # обрабатываем, если вернулось 2 или что-то другое
-            fibonacci_levels = {} # в случае ошибки уровни Фибоначчи делаем пустыми
-
+        # проверяем, что вернулось 3 значения
+        if isinstance(signal_info, tuple) and len(signal_info) == 3:
+            # распаковываем значения, если их 3
+            signal_text, trend_text, fibonacci_levels = signal_info
+        else:  # если вернулось не 3 значения (ошибка)
+            signal_text, trend_text = signal_info if isinstance(signal_info, tuple) else (
+                # обрабатываем, если вернулось 2 или что-то другое
+                TEXTS[context.user_data['language']]['error_fetching_data'], "")
+            fibonacci_levels = {}  # в случае ошибки уровни Фибоначчи делаем пустыми
 
         # ===  Определение силы сигнала и добавление стрелок (для 24h таймфрейма) ===
         signal_strength_arrows = ""
-        buy_signals = 0  #  Инициализация для доступа в этом скоупе
-        sell_signals = 0 #  Инициализация для доступа в этом скоупе
+        buy_signals = 0  # Инициализация для доступа в этом скоупе
+        sell_signals = 0  # Инициализация для доступа в этом скоупе
         if signal_text == TEXTS[context.user_data['language']]['signal_buy']:
-            buy_signals, sell_signals = get_signal_counts_for_arrows(coin_id, context=context) # Передаем context
-            if buy_signals - sell_signals >= 3: #  Настраиваемый порог для "сильного" сигнала
-                signal_strength_arrows = "⬆️⬆️⬆️ " # 3 стрелки вверх для сильного BUY (замена кружков)
+            buy_signals, sell_signals = get_signal_counts_for_arrows(
+                coin_id, context=context)  # Передаем context
+            if buy_signals - sell_signals >= 3:  # Настраиваемый порог для "сильного" сигнала
+                # 3 стрелки вверх для сильного BUY (замена кружков)
+                signal_strength_arrows = "⬆️⬆️⬆️ "
         elif signal_text == TEXTS[context.user_data['language']]['signal_sell']:
-            buy_signals, sell_signals = get_signal_counts_for_arrows(coin_id, context=context) # Передаем context
-            if sell_signals - buy_signals >= 3: #  Настраиваемый порог для "сильного" сигнала
-                signal_strength_arrows = "⬇️⬇️⬇️ " # 3 стрелки вниз для сильного SELL (замена кружков)
+            buy_signals, sell_signals = get_signal_counts_for_arrows(
+                coin_id, context=context)  # Передаем context
+            if sell_signals - buy_signals >= 3:  # Настраиваемый порог для "сильного" сигнала
+                # 3 стрелки вниз для сильного SELL (замена кружков)
+                signal_strength_arrows = "⬇️⬇️⬇️ "
         # ===  КОНЕЦ БЛОКА СТРЕЛОК ===
-
 
         message = (TEXTS[context.user_data['language']]['price_coin'].format(coin_id, price) +
                    TEXTS[context.user_data['language']]['change_24h'].format(change_24h) +
@@ -952,44 +1022,51 @@ async def handle_text(update: Update, context: CallbackContext):
 
         keyboard = [
             [
-                InlineKeyboardButton(TEXTS[context.user_data['language']]['button_1h'], callback_data=f"{coin_id}_1h"),
-                InlineKeyboardButton(TEXTS[context.user_data['language']]['button_4h'], callback_data=f"{coin_id}_4h"),
+                InlineKeyboardButton(
+                    TEXTS[context.user_data['language']]['button_1h'], callback_data=f"{coin_id}_1h"),
+                InlineKeyboardButton(
+                    TEXTS[context.user_data['language']]['button_4h'], callback_data=f"{coin_id}_4h"),
             ],
             [
-                InlineKeyboardButton(TEXTS[context.user_data['language']]['button_12h'], callback_data=f"{coin_id}_12h"),
-                InlineKeyboardButton(TEXTS[context.user_data['language']]['back_button'], callback_data=f"{coin_id}_back"),
+                InlineKeyboardButton(
+                    TEXTS[context.user_data['language']]['button_12h'], callback_data=f"{coin_id}_12h"),
+                InlineKeyboardButton(
+                    TEXTS[context.user_data['language']]['back_button'], callback_data=f"{coin_id}_back"),
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(message, parse_mode="Markdown", reply_markup=reply_markup)
 
-
-    elif len(parts) == 2 and parts[1].upper() == "USDT": #  Запрос цены в USDT (количество COIN USDT)
+    # Запрос цены в USDT (количество COIN USDT)
+    elif len(parts) == 2 and parts[1].upper() == "USDT":
         try:
             amount_str, coin_symbol_original = parts
             amount = float(amount_str)
             coin_symbol = coin_symbol_original.upper()
 
             # === === ===  ИСПОЛЬЗУЕМ COINGECKO ДЛЯ ЦЕН USDT ПАР  === === ===
-            coingecko_coin_id = get_coingecko_coin_id_by_symbol(coin_symbol) # Получаем CoinGecko ID по символу
+            coingecko_coin_id = get_coingecko_coin_id_by_symbol(
+                coin_symbol)  # Получаем CoinGecko ID по символу
 
             if coingecko_coin_id:
-                price_usd = get_coingecko_price(coingecko_coin_id, 'usd') # Получаем цену через CoinGecko
+                # Получаем цену через CoinGecko
+                price_usd = get_coingecko_price(coingecko_coin_id, 'usd')
                 if price_usd is not None:
                     calculated_value = amount * price_usd
-                    message = TEXTS[context.user_data['language']]['price_in_usdt'].format(calculated_value) # Форматируем с 8 знаками после запятой
+                    message = TEXTS[context.user_data['language']]['price_in_usdt'].format(
+                        calculated_value)  # Форматируем с 8 знаками после запятой
                     await update.message.reply_text(f"💰 {message}")
                 else:
-                    await update.message.reply_text(TEXTS[context.user_data['language']]['error_fetching_price_usdt'].format(coin_symbol)) # Сообщение об ошибке, если цена не получена с CoinGecko
+                    # Сообщение об ошибке, если цена не получена с CoinGecko
+                    await update.message.reply_text(TEXTS[context.user_data['language']]['error_fetching_price_usdt'].format(coin_symbol))
             else:
-                await update.message.reply_text(TEXTS[context.user_data['language']]['error_invalid_ticker'].format(coin_symbol)) # Сообщение об ошибке, если CoinGecko ID не найден
+                # Сообщение об ошибке, если CoinGecko ID не найден
+                await update.message.reply_text(TEXTS[context.user_data['language']]['error_invalid_ticker'].format(coin_symbol))
             # === === ===  КОНЕЦ БЛОКА COINGECKO  === === ===
-
 
         except ValueError:
             await update.message.reply_text(TEXTS[context.user_data['language']]['invalid_input_amount_coin_coin'])
-
 
     elif len(parts) == 3:  # Обработка "количество COIN1 COIN2" для любого тикера
         try:
@@ -1003,7 +1080,8 @@ async def handle_text(update: Update, context: CallbackContext):
             if direct_price:
                 # Если прямая цена есть на Binance, используем ее (как и раньше для крипто-крипто пар)
                 calculated_value = amount * direct_price
-                message = TEXTS[context.user_data['language']]['price_in_crypto'].format(calculated_value, coin2_id.upper())
+                message = TEXTS[context.user_data['language']]['price_in_crypto'].format(
+                    calculated_value, coin2_id.upper())
                 await update.message.reply_text(f"💰 {message}")
             else:
                 # Если прямой пары нет на Binance, пытаемся рассчитать через USDT (используем Binance цены для крипто-крипто пар, как и раньше)
@@ -1012,26 +1090,28 @@ async def handle_text(update: Update, context: CallbackContext):
 
                 if price_coin1_usdt_data and price_coin2_usdt_data:
                     # Получаем цены COIN1/USDT и COIN2/USDT с Binance
-                    price_coin1_usdt = float(price_coin1_usdt_data['lastPrice'])
-                    price_coin2_usdt = float(price_coin2_usdt_data['lastPrice'])
+                    price_coin1_usdt = float(
+                        price_coin1_usdt_data['lastPrice'])
+                    price_coin2_usdt = float(
+                        price_coin2_usdt_data['lastPrice'])
 
                     # Рассчитываем стоимость COIN1 в COIN2 через USDT как посредника (используем Binance цены)
-                    calculated_value = (amount * price_coin1_usdt) / price_coin2_usdt
-                    message = TEXTS[context.user_data['language']]['price_in_crypto'].format(calculated_value, coin2_id.upper())
+                    calculated_value = (
+                        amount * price_coin1_usdt) / price_coin2_usdt
+                    message = TEXTS[context.user_data['language']]['price_in_crypto'].format(
+                        calculated_value, coin2_id.upper())
                     await update.message.reply_text(f"💰 {message}")
                 else:
                     # Если не удалось получить цену через USDT на Binance, выводим сообщение об ошибке
                     await update.message.reply_text(
                         TEXTS[context.user_data['language']]['error_fetching_price_crypto'].format(coin1_id, coin2_id))
 
-
         except ValueError:
             await update.message.reply_text(TEXTS[context.user_data['language']]['invalid_input_amount_coin_coin'])
         except IndexError:
             await update.message.reply_text(TEXTS[context.user_data['language']]['invalid_input_amount_coin_coin_index_error'])
 
-
-    else: # Обработка ошибок ввода
+    else:  # Обработка ошибок ввода
         await update.message.reply_text(TEXTS[context.user_data['language']]['error_fetching_data'])
 
 
@@ -1061,12 +1141,15 @@ async def handle_timeframe_data(update: Update, context: CallbackContext):
     if len(hist_data) >= 2:
         first_price = hist_data[1][2]
         last_price = hist_data[0][2]
-        interval_change_percent = ((last_price - first_price) / first_price) * 100
+        interval_change_percent = (
+            (last_price - first_price) / first_price) * 100
 
     ### ====================  БЛОК НАСТРОЙКИ И ПОКАЗА ПРОЦЕНТОВ (КОНЕЦ) ==================== ###
 
-    signal_text, trend_text, fibonacci_levels = get_trading_signal(coin_id, interval, context=context) # Передаем context
-    price_data = get_binance_price(coin_id) # Используем Binance для текущей цены в техническом анализе (можно изменить на CoinGecko, если нужно)
+    signal_text, trend_text, fibonacci_levels = get_trading_signal(
+        coin_id, interval, context=context)  # Передаем context
+    # Используем Binance для текущей цены в техническом анализе (можно изменить на CoinGecko, если нужно)
+    price_data = get_binance_price(coin_id)
 
     if not price_data:
         await query.edit_message_text(TEXTS[context.user_data['language']]['error_fetching_timeframe_data'])
@@ -1077,53 +1160,65 @@ async def handle_timeframe_data(update: Update, context: CallbackContext):
     low = [l[1] for l in hist_data]
     close_prices = [c[2] for c in hist_data]
     volume = [v[3] for v in hist_data]
-    prices = close_prices # Используем close_prices как 'prices' для индикаторов
-
+    prices = close_prices  # Используем close_prices как 'prices' для индикаторов
 
     # Исправленный вызов calculate_indicators:
-    indicators = calculate_indicators(prices, high, low, close_prices, volume) # Передаем close_prices как 'close'
+    # Передаем close_prices как 'close'
+    indicators = calculate_indicators(prices, high, low, close_prices, volume)
 
     # ===  Расчет уровней Фибоначчи  ===
-    period_for_fibonacci_swing = 30 #  Настраиваемый период для Swing High/Low для Фибоначчи
-    swing_high_fib = np.max(high[-period_for_fibonacci_swing:]) if len(high) >= period_for_fibonacci_swing else None
-    swing_low_fib = np.min(low[-period_for_fibonacci_swing:]) if len(low) >= period_for_fibonacci_swing else None
-
+    # Настраиваемый период для Swing High/Low для Фибоначчи
+    period_for_fibonacci_swing = 30
+    swing_high_fib = np.max(high[-period_for_fibonacci_swing:]
+                            ) if len(high) >= period_for_fibonacci_swing else None
+    swing_low_fib = np.min(low[-period_for_fibonacci_swing:]
+                           ) if len(low) >= period_for_fibonacci_swing else None
 
     # ===  Определение силы сигнала и добавление стрелок ===
     signal_strength_arrows = ""
-    buy_signals = 0 #  Инициализация для доступа в этом скоупе
-    sell_signals = 0 #  Инициализация для доступа в этом скоупе
+    buy_signals = 0  # Инициализация для доступа в этом скоупе
+    sell_signals = 0  # Инициализация для доступа в этом скоупе
     if signal_text == TEXTS[context.user_data['language']]['signal_buy']:
-        buy_signals, sell_signals = get_signal_counts_for_arrows(coin_id, interval, context=context) # Передаем context
-        if buy_signals - sell_signals >= 3: #  Настраиваемый порог для "сильного" сигнала
-            signal_strength_arrows = "⬆️⬆️⬆️ " # 3 стрелки вверх для сильного BUY (замена кружков)
+        buy_signals, sell_signals = get_signal_counts_for_arrows(
+            coin_id, interval, context=context)  # Передаем context
+        if buy_signals - sell_signals >= 3:  # Настраиваемый порог для "сильного" сигнала
+            # 3 стрелки вверх для сильного BUY (замена кружков)
+            signal_strength_arrows = "⬆️⬆️⬆️ "
     elif signal_text == TEXTS[context.user_data['language']]['signal_sell']:
-        buy_signals, sell_signals = get_signal_counts_for_arrows(coin_id, interval, context=context) # Передаем context
-        if sell_signals - buy_signals >= 3: #  Настраиваемый порог для "сильного" сигнала
-            signal_strength_arrows = "⬇️⬇️⬇️ " # 3 стрелки вниз для сильного SELL (замена кружков)
+        buy_signals, sell_signals = get_signal_counts_for_arrows(
+            coin_id, interval, context=context)  # Передаем context
+        if sell_signals - buy_signals >= 3:  # Настраиваемый порог для "сильного" сигнала
+            # 3 стрелки вниз для сильного SELL (замена кружков)
+            signal_strength_arrows = "⬇️⬇️⬇️ "
     # ===  КОНЕЦ БЛОКА СТРЕЛОК ===
 
     # Вставляем небольшое случайное изменение в price и interval_change_percent перед форматированием
     noisy_price = price + numpy.random.rand() * 1e-9  # Добавляем шум к цене
-    noisy_interval_change_percent = interval_change_percent + numpy.random.rand() * 1e-9
+    noisy_interval_change_percent = interval_change_percent + numpy.random.rand() * \
+        1e-9
 
-
-    message = (TEXTS[context.user_data['language']]['price_coin'].format(coin_id, noisy_price) + # Используем noisy_price здесь
-             #  TEXTS[context.user_data['language']]['timeframe_change'].format(get_interval_label(interval, context.user_data['language']), noisy_interval_change_percent) + # Используем noisy_interval_change_percent здесь и язык из user_data
-               TEXTS[context.user_data['language']]['signal_timeframe'].format(interval, signal_strength_arrows + signal_text) + # Добавляем стрелки перед текстом сигнала
-               TEXTS[context.user_data['language']]['trend_timeframe'].format(interval, trend_text)
-              )
+    message = (TEXTS[context.user_data['language']]['price_coin'].format(coin_id, noisy_price) +  # Используем noisy_price здесь
+               #  TEXTS[context.user_data['language']]['timeframe_change'].format(get_interval_label(interval, context.user_data['language']), noisy_interval_change_percent) + # Используем noisy_interval_change_percent здесь и язык из user_data
+               # Добавляем стрелки перед текстом сигнала
+               TEXTS[context.user_data['language']]['signal_timeframe'].format(interval, signal_strength_arrows + signal_text) +
+               TEXTS[context.user_data['language']
+                     ]['trend_timeframe'].format(interval, trend_text)
+               )
 
     # Блок с уровнями Фибоначчи УДАЛЕН
 
     keyboard = [
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['button_1h'], callback_data=f"{coin_id}_1h"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['button_4h'], callback_data=f"{coin_id}_4h"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['button_1h'], callback_data=f"{coin_id}_1h"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['button_4h'], callback_data=f"{coin_id}_4h"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['button_12h'], callback_data=f"{coin_id}_12h"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['back_button'], callback_data=f"{coin_id}_back"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['button_12h'], callback_data=f"{coin_id}_12h"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['back_button'], callback_data=f"{coin_id}_back"),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -1131,8 +1226,8 @@ async def handle_timeframe_data(update: Update, context: CallbackContext):
     await query.edit_message_text(message, parse_mode="Markdown", reply_markup=reply_markup)
 
 
-
-def get_signal_counts_for_arrows(coin_id, interval='1d', context=None): # Добавлено context
+# Добавлено context
+def get_signal_counts_for_arrows(coin_id, interval='1d', context=None):
     """
     Вспомогательная функция для получения количества buy_signals и sell_signals
     для определения силы сигнала и отображения стрелок.
@@ -1152,11 +1247,14 @@ def get_signal_counts_for_arrows(coin_id, interval='1d', context=None): # Доб
 
     # === Расчет уровней Фибоначчи ===
     period_for_fibonacci_swing = 30
-    swing_high_fib = np.max(high[-period_for_fibonacci_swing:]) if len(high) >= period_for_fibonacci_swing else None
-    swing_low_fib = np.min(low[-period_for_fibonacci_swing:]) if len(low) >= period_for_fibonacci_swing else None
+    swing_high_fib = np.max(high[-period_for_fibonacci_swing:]
+                            ) if len(high) >= period_for_fibonacci_swing else None
+    swing_low_fib = np.min(low[-period_for_fibonacci_swing:]
+                           ) if len(low) >= period_for_fibonacci_swing else None
     fibonacci_levels = {}
     if swing_high_fib and swing_low_fib:
-        fibonacci_levels = calculate_fibonacci_levels(swing_low_fib, swing_high_fib)
+        fibonacci_levels = calculate_fibonacci_levels(
+            swing_low_fib, swing_high_fib)
     # === Конец расчета уровней Фибоначчи ===
 
     buy_signals = sell_signals = 0
@@ -1166,9 +1264,10 @@ def get_signal_counts_for_arrows(coin_id, interval='1d', context=None): # Доб
         buy_signals += 1
     elif close[-1] >= indicators['upper_bb']:
         sell_signals += 1
-    if indicators['stoch_k'] < 25: # Stochastic K перепродан (изменено на 25)
+    if indicators['stoch_k'] < 25:  # Stochastic K перепродан (изменено на 25)
         buy_signals += 1
-    elif indicators['stoch_k'] > 75: # Stochastic K перекуплен (изменено на 75)
+    # Stochastic K перекуплен (изменено на 75)
+    elif indicators['stoch_k'] > 75:
         sell_signals += 1
     if indicators['sma_20'] > indicators['sma_50']:
         buy_signals += 1
@@ -1179,26 +1278,27 @@ def get_signal_counts_for_arrows(coin_id, interval='1d', context=None): # Доб
             buy_signals += 1
         else:
             sell_signals += 1
-    if indicators['sar'] > close[-1]: # Исправлено условие для SAR (ранее была опечатка)
-        buy_signals += 1 # Сигнал BUY, если SAR ниже цены
+    # Исправлено условие для SAR (ранее была опечатка)
+    if indicators['sar'] > close[-1]:
+        buy_signals += 1  # Сигнал BUY, если SAR ниже цены
     else:
-        sell_signals += 1 # Сигнал SELL, если SAR выше цены
+        sell_signals += 1  # Сигнал SELL, если SAR выше цены
     if support and resistance:
         if close[-1] <= support * 1.005:
             buy_signals += 1
         elif close[-1] >= resistance * 0.995:
             sell_signals += 1
-    if indicators['rsi'] > 65: # RSI перекуплен (изменено на 65)
+    if indicators['rsi'] > 65:  # RSI перекуплен (изменено на 65)
         sell_signals += 1
-    elif indicators['rsi'] < 35: # RSI перепродан (изменено на 35)
+    elif indicators['rsi'] < 35:  # RSI перепродан (изменено на 35)
         buy_signals += 1
     if indicators['macd'] > indicators['signal']:
         buy_signals += 1
     elif indicators['macd'] < indicators['signal']:
         sell_signals += 1
-    if indicators['ema_30'] > indicators['ema_100']: # Изменено на ema_30 и ema_100
+    if indicators['ema_30'] > indicators['ema_100']:  # Изменено на ema_30 и ema_100
         buy_signals += 1
-    elif indicators['ema_30'] < indicators['ema_100']: # Изменено на ema_30 и ema_100
+    elif indicators['ema_30'] < indicators['ema_100']:  # Изменено на ema_30 и ema_100
         sell_signals += 1
     if indicators['willr'] < -80:
         buy_signals += 1
@@ -1223,7 +1323,8 @@ def get_signal_counts_for_arrows(coin_id, interval='1d', context=None): # Доб
         buy_signals += 1
 
     # Ichimoku
-    conversion_line, base_line, leading_span_b = calculate_ichimoku(high, low, close)
+    conversion_line, base_line, leading_span_b = calculate_ichimoku(
+        high, low, close)
     if conversion_line and base_line and leading_span_b:
         if close[-1] > conversion_line and close[-1] > base_line:
             buy_signals += 1
@@ -1240,7 +1341,8 @@ def get_signal_counts_for_arrows(coin_id, interval='1d', context=None): # Доб
 #                       Секция 7: Вспомогательные функции
 # ======================================================================
 
-def get_interval_label(interval, lang='ru'): # lang='ru' больше не нужен, но оставим для совместимости и если захотим глобальный язык по умолчанию
+# lang='ru' больше не нужен, но оставим для совместимости и если захотим глобальный язык по умолчанию
+def get_interval_label(interval, lang='ru'):
     """
     Возвращает локализованное название интервала времени.
     """
@@ -1264,7 +1366,8 @@ def get_interval_label(interval, lang='ru'): # lang='ru' больше не ну�
             'Change': TEXTS['en']['interval_change'],
         }
     }
-    return interval_labels[lang].get(interval, TEXTS[lang]['interval_change']) # lang теперь context.user_data['language']
+    # lang теперь context.user_data['language']
+    return interval_labels[lang].get(interval, TEXTS[lang]['interval_change'])
 
 
 # ======================================================================
@@ -1272,44 +1375,50 @@ def get_interval_label(interval, lang='ru'): # lang='ru' больше не ну�
 #                       (Inline кнопки, ответы на нажатия)
 # ======================================================================
 
-async def start(update: Update, context: CallbackContext, query=None): # Добавляем параметр query
+async def start(update: Update, context: CallbackContext, query=None):  # Добавляем параметр query
     """Обработчик команды /start, вывод стартового сообщения и кнопок."""
-    user_id = update.message.from_user.id if update.message else query.from_user.id # Определяем user_id для message и callback_query
+    user_id = update.message.from_user.id if update.message else query.from_user.id  # Определяем user_id для message и callback_query
     user_language = get_user_language(user_id)
     context.user_data['language'] = user_language
 
     keyboard = [
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    message_text = TEXTS[context.user_data['language']]['start_message'] # Получаем текст сообщения
+    message_text = TEXTS[context.user_data['language']
+                         ]['start_message']  # Получаем текст сообщения
 
-    if query: # Если функция вызвана из CallbackQuery (например, при смене языка)
-        await query.answer() # Подтверждаем CallbackQuery
+    # Если функция вызвана из CallbackQuery (например, при смене языка)
+    if query:
+        await query.answer()  # Подтверждаем CallbackQuery
         await query.edit_message_text(  # Редактируем существующее сообщение
             message_text,
             reply_markup=reply_markup,
             parse_mode="Markdown"
         )
-    else: # Если функция вызвана командой /start (новое сообщение)
-        await update.message.reply_text( # Отправляем новое сообщение
+    else:  # Если функция вызвана командой /start (новое сообщение)
+        await update.message.reply_text(  # Отправляем новое сообщение
             message_text,
             reply_markup=reply_markup,
             parse_mode="Markdown"
         )
-
-   
 
 
 async def help(update: Update, context: CallbackContext):
@@ -1330,16 +1439,22 @@ async def help(update: Update, context: CallbackContext):
 
     keyboard = [
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -1354,22 +1469,30 @@ async def handle_donat(update: Update, context: CallbackContext):
     # ===  Добавляем клавиатуру главного меню ===
     keyboard = [
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_rise_button'], callback_data="TOP10_RISE"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['top10_fall_button'], callback_data="TOP10_FALL"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['help_button'], callback_data="HELP"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['donat_button'], callback_data="DONAT"),
         ],
         [
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
-            InlineKeyboardButton(TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['english_button'], callback_data="LANGUAGE_EN"),
+            InlineKeyboardButton(
+                TEXTS[context.user_data['language']]['russian_button'], callback_data="LANGUAGE_RU"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     # ===  Клавиатура главного меню добавлена ===
 
-    await update.callback_query.edit_message_text(message, parse_mode="Markdown", reply_markup=reply_markup) #  Заменено на edit_message_text и добавлен reply_markup
+    # Заменено на edit_message_text и добавлен reply_markup
+    await update.callback_query.edit_message_text(message, parse_mode="Markdown", reply_markup=reply_markup)
+
 
 async def button(update: Update, context: CallbackContext):
     """
@@ -1388,15 +1511,19 @@ async def button(update: Update, context: CallbackContext):
         await help(update, context)
     elif query.data == "DONAT":
         await handle_donat(update, context)
-    elif query.data == "LANGUAGE_EN": # Обработка кнопки English (на главном экране)
+    # Обработка кнопки English (на главном экране)
+    elif query.data == "LANGUAGE_EN":
         set_user_language(user_id, 'en')
         context.user_data['language'] = 'en'
-        await start(update, context, query=query) # Вызываем start с query для редактирования сообщения!
+        # Вызываем start с query для редактирования сообщения!
+        await start(update, context, query=query)
         await query.answer(text="Bot language switched to English!")
-    elif query.data == "LANGUAGE_RU": # Обработка кнопки Русский (на главном экране)
+    # Обработка кнопки Русский (на главном экране)
+    elif query.data == "LANGUAGE_RU":
         set_user_language(user_id, 'ru')
         context.user_data['language'] = 'ru'
-        await start(update, context, query=query) # Вызываем start с query для редактирования сообщения!
+        # Вызываем start с query для редактирования сообщения!
+        await start(update, context, query=query)
         await query.answer(text="Язык бота переключен на русский!")
     elif "_" in query.data and query.data != "CLOSE_HELP":
         await handle_timeframe_data(update, context)
@@ -1416,10 +1543,13 @@ async def close_help(update: Update, context: CallbackContext):
 
 def main():
     """Главная функция для запуска бота."""
-    application = Application.builder().token("7568689765:AAHLeergcWCz3EyzMQ5GGqBCylFiQs2xn-Q").build() # Замените на свой токен бота
+    application = Application.builder().token(
+        # Замените на свой токен бота
+        "7568689765:AAHLeergcWCz3EyzMQ5GGqBCylFiQs2xn-Q").build()
 
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND, handle_text))
     application.add_handler(CallbackQueryHandler(button))
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
@@ -1427,11 +1557,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-# <----  ИСПОЛЬЗУЕМ URL ИЗ ПЕРЕМЕННОЙ СРЕДЫ
-    # ===  КОНЕЦ ЗАПУСКА WEBHOOK ===
 
 
 if __name__ == "__main__":
