@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FFK">
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322D3A6'/%3E%3Cstop offset='1' stop-color='%237C5CFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='%230B1220'/%3E%3Ctext x='50' y='64' font-size='40' font-family='Arial' font-weight='900' text-anchor='middle' fill='url(%23g)'%3EFFK%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2322D3A6'/%3E%3Cstop offset='1' stop-color='%237C5CFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='%230B1220'/%3E%3Ctext x='50' y='64' font-size='40' font-family='Arial' font-weight='900' text-anchor='middle' fill='url(%23g)'%3EFFK%3C/text%3E%3C/svg%3E">
+<title>FFK — Оценка матча</title>
+<style>
+  :root{
+    --bg:#0B1220;
+    --bg-glow:#0F2B22;
+    --surface:#141F35;
+    --surface-2:#1B2740;
+    --border:rgba(255,255,255,.09);
+    --text:#EDF1F7;
+    --text-soft:#8D9AB5;
+    --accent:#22D3A6;
+    --accent-dark:#189A79;
+    --violet:#7C5CFC;
+    --gold:#F5B942;
+    --gold-dark:#C98F1F;
+    --danger:#FB6767;
+    --shadow: 0 12px 28px rgba(0,0,0,.35);
+    --shadow-sm: 0 4px 14px rgba(0,0,0,.28);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+  }
+  .app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+
+  /* ---------- Header ---------- */
+  .topbar{
+    padding:22px 18px 20px;
+    position:relative;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 100% at 15% 0%, rgba(34,211,166,.28) 0%, rgba(34,211,166,0) 55%),
+      radial-gradient(90% 90% at 100% 0%, rgba(124,92,252,.25) 0%, rgba(124,92,252,0) 55%),
+      var(--bg);
+  }
+  .club-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .club-badge{
+    width:46px; height:46px;
+    border-radius:14px;
+    background:linear-gradient(135deg, var(--accent), var(--violet));
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900;
+    font-size:.85rem;
+    letter-spacing:.02em;
+    color:#08121C;
+    box-shadow:var(--shadow-sm);
+    flex-shrink:0;
+  }
+  .club-text{display:flex; flex-direction:column;}
+  .club-name{
+    font-size:1.05rem;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+  .player-name{
+    font-size:.8rem;
+    color:var(--text-soft);
+    font-weight:600;
+  }
+
+  .hero{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    margin-top:20px;
+    background:rgba(255,255,255,.045);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:16px 18px;
+    backdrop-filter:blur(6px);
+  }
+  .hero-score{
+    font-size:2.9rem;
+    font-weight:800;
+    line-height:1;
+    color:var(--gold);
+    font-variant-numeric:tabular-nums;
+  }
+  .hero-score small{
+    font-size:1.05rem;
+    color:var(--text-soft);
+    font-weight:700;
+  }
+  .hero-label{
+    font-size:.76rem;
+    color:var(--text-soft);
+    text-align:right;
+    line-height:1.35;
+    font-weight:600;
+  }
+
+  /* ---------- Content ---------- */
+  .content{
+    flex:1;
+    padding:20px 16px 100px;
+  }
+  .view{display:none;}
+  .view.active{display:block; animation:fadein .2s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-size:.74rem;
+    font-weight:700;
+    color:var(--text-soft);
+    margin-bottom:6px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .field input[type=text],
+  .field input[type=date],
+  .field select,
+  .field textarea{
+    width:100%;
+    padding:11px 13px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--surface);
+    font-size:.95rem;
+    color:var(--text);
+    font-family:inherit;
+    outline:none;
+  }
+  .field input::placeholder, .field textarea::placeholder{color:#5B6A88;}
+  .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--accent);}
+  .field select{-webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%238D9AB5'%3E%3Cpath d='M5 7l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center;
+  }
+  .field input[type=date]{color-scheme:dark;}
+  .field textarea{resize:vertical; min-height:56px;}
+  .row2{display:flex; gap:10px;}
+  .row2 .field{flex:1;}
+
+  .section-title{
+    font-size:.72rem;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--text-soft);
+    margin:24px 0 10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--border);
+  }
+
+  .metric-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .metric-row:last-child{border-bottom:none;}
+  .metric-name{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    font-size:.9rem;
+    font-weight:600;
+  }
+  .metric-icon{
+    width:32px; height:32px;
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1rem;
+    background:var(--surface-2);
+    flex-shrink:0;
+  }
+  .metric-weight{
+    font-size:.72rem;
+    color:var(--text-soft);
+    display:block;
+    font-weight:600;
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .stepper button{
+    width:32px; height:32px;
+    border-radius:50%;
+    border:none;
+    background:var(--surface-2);
+    color:var(--text);
+    font-size:1.15rem;
+    line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:transform .1s;
+  }
+  .stepper button:active{transform:scale(.9); background:var(--accent); color:#08121C;}
+  .stepper .val{
+    min-width:20px;
+    text-align:center;
+    font-weight:800;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .behavior-row{padding:11px 0; border-bottom:1px solid var(--border);}
+  .behavior-row:last-child{border-bottom:none;}
+  .behavior-top{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:.88rem; margin-bottom:8px; font-weight:600;
+  }
+  .behavior-top .val{
+    font-weight:800; color:var(--accent);
+    background:rgba(34,211,166,.12);
+    padding:2px 9px;
+    border-radius:20px;
+    font-size:.82rem;
+  }
+  input[type=range]{
+    width:100%;
+    -webkit-appearance:none;
+    height:6px;
+    border-radius:3px;
+    background:var(--surface-2);
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:24px; height:24px;
+    border-radius:50%;
+    background:linear-gradient(135deg, var(--accent), var(--violet));
+    border:3px solid var(--bg);
+    box-shadow:var(--shadow-sm);
+    cursor:pointer;
+  }
+
+  .save-btn{
+    width:100%;
+    margin-top:24px;
+    padding:15px;
+    border:none;
+    border-radius:16px;
+    background:linear-gradient(135deg, var(--accent), var(--violet));
+    color:#08121C;
+    font-size:1rem;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+    letter-spacing:.01em;
+  }
+  .save-btn:active{filter:brightness(.92);}
+
+  .toast{
+    position:fixed;
+    left:50%; bottom:96px;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:11px 20px;
+    border-radius:24px;
+    font-size:.85rem;
+    font-weight:600;
+    opacity:0;
+    transition:opacity .25s, transform .25s;
+    pointer-events:none;
+    z-index:50;
+    white-space:nowrap;
+    box-shadow:var(--shadow);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ---------- History ---------- */
+  .empty{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--text-soft);
+    font-weight:600;
+  }
+  .empty .emoji{font-size:2.4rem; display:block; margin-bottom:10px;}
+  .match-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:13px 15px;
+    margin-bottom:10px;
+    box-shadow:var(--shadow-sm);
+  }
+  .match-card-top{
+    display:flex; justify-content:space-between; align-items:center;
+    cursor:pointer;
+  }
+  .match-meta{display:flex; flex-direction:column; gap:2px;}
+  .match-date{font-size:.7rem; color:var(--text-soft); font-weight:700; text-transform:uppercase; letter-spacing:.03em;}
+  .match-opp{font-size:.95rem; font-weight:700;}
+  .match-score{font-size:.78rem; color:var(--text-soft);}
+  .match-rating{
+    font-size:1.4rem;
+    font-weight:800;
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+  }
+  .match-rating.low{color:var(--danger);}
+  .match-rating.mid{color:var(--gold);}
+  .match-details{
+    display:none;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--border);
+    font-size:.82rem;
+    color:var(--text-soft);
+  }
+  .match-details.open{display:block;}
+  .detail-grid{display:grid; grid-template-columns:1fr; gap:4px; margin-bottom:8px;}
+  .del-btn{
+    margin-top:8px;
+    background:none;
+    border:1.5px solid var(--danger);
+    color:var(--danger);
+    padding:6px 12px;
+    border-radius:10px;
+    font-size:.78rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .backup-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .backup-btn{
+    flex:1;
+    padding:11px 8px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+    font-size:.78rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .backup-btn:active{background:var(--surface-2);}
+
+  /* ---------- Stats ---------- */
+  .period-chips{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+    overflow-x:auto;
+  }
+  .chip{
+    padding:9px 15px;
+    border-radius:22px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    font-size:.82rem;
+    font-weight:700;
+    color:var(--text-soft);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .chip.active{
+    background:linear-gradient(135deg, var(--accent), var(--violet));
+    border-color:transparent;
+    color:#08121C;
+  }
+  .stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:13px 15px;
+  }
+  .stat-card .num{font-size:1.5rem; font-weight:800; color:var(--text); font-variant-numeric:tabular-nums;}
+  .stat-card .lbl{font-size:.72rem; color:var(--text-soft); font-weight:600; margin-top:2px;}
+  .chart-wrap{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+  }
+  .chart-wrap h3{margin:0 0 12px; font-size:.82rem; color:var(--text-soft); font-weight:700;}
+
+  /* ---------- Tab bar ---------- */
+  .tabbar{
+    position:fixed;
+    left:50%; transform:translateX(-50%);
+    bottom:14px;
+    width:calc(100% - 28px);
+    max-width:452px;
+    background:rgba(20,31,53,.92);
+    backdrop-filter:blur(10px);
+    display:flex;
+    border:1px solid var(--border);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    z-index:40;
+    padding:6px;
+  }
+  .tabbtn{
+    flex:1;
+    border:none;
+    background:none;
+    padding:9px 4px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    font-size:.68rem;
+    font-weight:700;
+    color:var(--text-soft);
+    cursor:pointer;
+    border-radius:14px;
+    transition:background .15s, color .15s;
+  }
+  .tabbtn .ic{font-size:1.15rem;}
+  .tabbtn.active{color:var(--bg); background:linear-gradient(135deg, var(--accent), var(--violet));}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="club-row">
+      <div class="club-badge">FFK</div>
+      <div class="club-text">
+        <div class="club-name">FFK</div>
+        <div class="player-name" id="playerNameDisplay">Данило Михайлюк</div>
+      </div>
+    </div>
+    <div class="hero" id="heroBlock">
+      <div class="hero-score" id="heroScore">6.0<small>/10</small></div>
+      <div class="hero-label">оценка<br>за текущий матч</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===================== NEW MATCH ===================== -->
+    <div class="view active" id="view-new">
+      <div class="field">
+        <label>Игрок</label>
+        <input type="text" id="f-player" value="Данило Михайлюк">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Дата</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="field">
+          <label>Позиция</label>
+          <select id="f-position">
+            <option>Нападающий</option>
+            <option>Полузащитник</option>
+            <option>Защитник</option>
+            <option>Вратарь</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Команда соперника</label>
+          <input type="text" id="f-opponent" placeholder="">
+        </div>
+        <div class="field">
+          <label>Счёт</label>
+          <input type="text" id="f-score" placeholder="">
+        </div>
+      </div>
+
+      <div class="section-title">Игровые действия</div>
+      <div id="metricsList"></div>
+
+      <div class="section-title">Как играл (1–5)</div>
+      <div id="behaviorList"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label>Комментарий</label>
+        <textarea id="f-comment" placeholder=""></textarea>
+      </div>
+
+      <button class="save-btn" id="saveBtn">Сохранить матч</button>
+    </div>
+
+    <!-- ===================== HISTORY ===================== -->
+    <div class="view" id="view-history">
+      <div class="backup-row">
+        <button class="backup-btn" id="exportBtn">⬇️ Экспорт (в Загрузки)</button>
+        <button class="backup-btn" id="importBtn">⬆️ Импорт</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+      </div>
+      <div id="historyList"></div>
+    </div>
+
+    <!-- ===================== STATS ===================== -->
+    <div class="view" id="view-stats">
+      <div class="period-chips" id="periodChips">
+        <div class="chip active" data-days="7">Неделя</div>
+        <div class="chip" data-days="30">Месяц</div>
+        <div class="chip" data-days="90">3 месяца</div>
+        <div class="chip" data-days="99999">Всё время</div>
+      </div>
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="chart-wrap">
+        <h3>Динамика оценки</h3>
+        <svg id="chartSvg" viewBox="0 0 300 120" style="width:100%; height:120px;"></svg>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tabbar">
+    <button class="tabbtn active" data-view="new"><span class="ic">➕</span>Матч</button>
+    <button class="tabbtn" data-view="history"><span class="ic">🗂️</span>История</button>
+    <button class="tabbtn" data-view="stats"><span class="ic">📊</span>Статистика</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const METRICS = [
+  {key:'goals',      label:'Гол',                        weight:0.8, icon:'⚽'},
+  {key:'assists',    label:'Ассист',                      weight:0.5, icon:'🎯'},
+  {key:'shots',      label:'Удар в створ',                 weight:0.2, icon:'🥅'},
+  {key:'dribbles',   label:'Обводка / финт',               weight:0.1, icon:'🌀'},
+  {key:'tackles',    label:'Отбор мяча',                   weight:0.1, icon:'🛡️'},
+  {key:'passes',     label:'Острый пас',                   weight:0.1, icon:'📤'},
+  {key:'support',    label:'Поддержка партнёра',           weight:0.1, icon:'🤝'},
+  {key:'losses',     label:'Потеря мяча в дриблинге',      weight:-0.2, icon:'❌'},
+  {key:'badpass',    label:'Неточная передача',            weight:-0.1, icon:'↩️'},
+  {key:'badtouch',   label:'Потеря при приёме мяча',       weight:-0.1, icon:'🫳'},
+  {key:'duelslost',  label:'Проигранное единоборство',     weight:-0.1, icon:'🤼'},
+  {key:'fouls',      label:'Фол',                          weight:-0.3, icon:'🟨'},
+  {key:'owngoal',    label:'Автогол',                      weight:-1.0, icon:'😬'},
+];
+const BEHAVIOR = [
+  {key:'effort',     label:'Старание и борьба за мяч'},
+  {key:'team',       label:'Игра в команде'},
+  {key:'mood',       label:'Настроение и эмоции'},
+  {key:'coach',      label:'Слушал тренера'},
+  {key:'discipline', label:'Дисциплина / уважение к судье'},
+];
+const BASE_RATING = 6.0;
+
+let matches = [];
+let form = { counts:{}, behaviors:{} };
+METRICS.forEach(m => form.counts[m.key] = 0);
+BEHAVIOR.forEach(b => form.behaviors[b.key] = 3);
+
+// ---------- storage (localStorage — работает офлайн, прямо в браузере телефона) ----------
+async function loadMatches(){
+  try{
+    const raw = localStorage.getItem('football_matches');
+    matches = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    matches = [];
+  }
+}
+async function saveMatches(){
+  try{
+    localStorage.setItem('football_matches', JSON.stringify(matches));
+  }catch(e){
+    showToast('Не удалось сохранить 😔');
+  }
+}
+
+// ---------- rating ----------
+function computeRating(counts, behaviors){
+  let actionSum = 0;
+  METRICS.forEach(m => actionSum += (counts[m.key]||0) * m.weight);
+  const bVals = BEHAVIOR.map(b => behaviors[b.key] || 3);
+  const bAvg = bVals.reduce((a,b)=>a+b,0) / bVals.length;
+  let rating = BASE_RATING + actionSum + (bAvg - 3) * 0.5;
+  rating = Math.max(0, Math.min(10, rating));
+  return Math.round(rating * 10) / 10;
+}
+function ratingClass(r){
+  if(r < 5.5) return 'low';
+  if(r < 7.5) return 'mid';
+  return '';
+}
+
+// ---------- render: new match form ----------
+function renderMetrics(){
+  const el = document.getElementById('metricsList');
+  el.innerHTML = METRICS.map(m => `
+    <div class="metric-row">
+      <div class="metric-name">
+        <div class="metric-icon">${m.icon}</div>
+        <div>
+          ${m.label}
+          <span class="metric-weight">${m.weight>0?'+':''}${m.weight.toFixed(1)} балла</span>
+        </div>
+      </div>
+      <div class="stepper">
+        <button onclick="stepMetric('${m.key}',-1)">−</button>
+        <div class="val" id="cnt-${m.key}">0</div>
+        <button onclick="stepMetric('${m.key}',1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+function renderBehaviors(){
+  const el = document.getElementById('behaviorList');
+  el.innerHTML = BEHAVIOR.map(b => `
+    <div class="behavior-row">
+      <div class="behavior-top">
+        <span>${b.label}</span>
+        <span class="val" id="bval-${b.key}">3</span>
+      </div>
+      <input type="range" min="1" max="5" step="1" value="3"
+             id="brange-${b.key}" oninput="setBehavior('${b.key}', this.value)">
+    </div>
+  `).join('');
+}
+window.stepMetric = function(key, dir){
+  form.counts[key] = Math.max(0, (form.counts[key]||0) + dir);
+  document.getElementById('cnt-'+key).textContent = form.counts[key];
+  updateHero();
+};
+window.setBehavior = function(key, val){
+  form.behaviors[key] = parseInt(val);
+  document.getElementById('bval-'+key).textContent = val;
+  updateHero();
+};
+function updateHero(){
+  const r = computeRating(form.counts, form.behaviors);
+  document.getElementById('heroScore').innerHTML = r.toFixed(1) + '<small>/10</small>';
+}
+function resetForm(){
+  METRICS.forEach(m => form.counts[m.key] = 0);
+  BEHAVIOR.forEach(b => form.behaviors[b.key] = 3);
+  renderMetrics();
+  renderBehaviors();
+  document.getElementById('f-opponent').value = '';
+  document.getElementById('f-score').value = '';
+  document.getElementById('f-comment').value = '';
+  document.getElementById('f-date').value = todayStr();
+  updateHero();
+}
+// Локальная дата (без сдвига по UTC), формат YYYY-MM-DD для <input type=date>
+function todayStr(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function daysAgoStr(days){
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+// ---------- save ----------
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const player = document.getElementById('f-player').value.trim() || 'Данило Михайлюк';
+  const date = document.getElementById('f-date').value || todayStr();
+  const opponent = document.getElementById('f-opponent').value.trim();
+  const score = document.getElementById('f-score').value.trim();
+  const position = document.getElementById('f-position').value;
+  const comment = document.getElementById('f-comment').value.trim();
+  const rating = computeRating(form.counts, form.behaviors);
+
+  matches.push({
+    id: Date.now(),
+    player, date, opponent, score, position, comment, rating,
+    counts: {...form.counts},
+    behaviors: {...form.behaviors}
+  });
+  await saveMatches();
+  showToast('Матч сохранён ⚽');
+  resetForm();
+  renderHistory();
+  renderStats();
+});
+
+// ---------- toast ----------
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+// ---------- history ----------
+function renderHistory(){
+  const el = document.getElementById('historyList');
+  if(matches.length === 0){
+    el.innerHTML = `<div class="empty"><span class="emoji">🗒️</span>Пока нет сохранённых матчей.<br>Заполните первый на вкладке «Матч».</div>`;
+    return;
+  }
+  const sorted = [...matches].sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
+  el.innerHTML = sorted.map(m => {
+    const metricLine = METRICS.filter(x=>m.counts[x.key]>0)
+      .map(x=>`${x.icon} ${m.counts[x.key]}`).join('  ') || '—';
+    return `
+    <div class="match-card">
+      <div class="match-card-top" onclick="toggleDetails(${m.id})">
+        <div class="match-meta">
+          <span class="match-date">${formatDate(m.date)}</span>
+          <span class="match-opp">${m.opponent || 'Без названия'}</span>
+          <span class="match-score">${m.score ? 'Счёт '+m.score : ''} ${m.position ? '· '+m.position : ''}</span>
+        </div>
+        <div class="match-rating ${ratingClass(m.rating)}">${m.rating.toFixed(1)}</div>
+      </div>
+      <div class="match-details" id="details-${m.id}">
+        <div class="detail-grid">
+          <div>Игрок: ${escapeHtml(m.player || 'Данило Михайлюк')}</div>
+          <div>Действия: ${metricLine}</div>
+        </div>
+        ${m.comment ? `<div>💬 ${escapeHtml(m.comment)}</div>` : ''}
+        <button class="del-btn" onclick="deleteMatch(${m.id})">Удалить матч</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+window.toggleDetails = function(id){
+  const d = document.getElementById('details-'+id);
+  d.classList.toggle('open');
+};
+window.deleteMatch = async function(id){
+  matches = matches.filter(m => m.id !== id);
+  await saveMatches();
+  renderHistory();
+  renderStats();
+  showToast('Матч удалён');
+};
+function formatDate(iso){
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- backup: export / import as a real file in phone storage ----------
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if(matches.length === 0){
+    showToast('Пока нечего экспортировать');
+    return;
+  }
+  const blob = new Blob([JSON.stringify(matches, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = todayStr();
+  a.href = url;
+  a.download = `ffk_matches_${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('Файл сохранён в Загрузки 📥');
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const imported = JSON.parse(text);
+    if(!Array.isArray(imported)) throw new Error('bad format');
+    const existingIds = new Set(matches.map(m => m.id));
+    let added = 0;
+    imported.forEach(m => {
+      if(m && m.id && !existingIds.has(m.id)){
+        matches.push(m);
+        existingIds.add(m.id);
+        added++;
+      }
+    });
+    await saveMatches();
+    renderHistory();
+    renderStats();
+    showToast(added > 0 ? `Добавлено матчей: ${added} ⚽` : 'Новых матчей не найдено');
+  }catch(err){
+    showToast('Не удалось прочитать файл 😔');
+  }
+  e.target.value = '';
+});
+
+// ---------- stats ----------
+let currentPeriodDays = 7;
+document.getElementById('periodChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  currentPeriodDays = parseInt(chip.dataset.days);
+  renderStats();
+});
+
+function filteredMatches(days){
+  const cutoffStr = daysAgoStr(days);
+  return matches.filter(m => m.date >= cutoffStr);
+}
+
+function renderStats(){
+  const list = filteredMatches(currentPeriodDays).sort((a,b)=>a.date.localeCompare(b.date));
+  const grid = document.getElementById('statGrid');
+
+  if(list.length === 0){
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1;"><span class="emoji">📭</span>За этот период матчей нет.</div>`;
+    drawChart([]);
+    return;
+  }
+
+  const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+  const sum = key => list.reduce((a,m)=>a+(m.counts[key]||0),0);
+
+  const cards = [
+    {num: list.length, lbl:'Матчей'},
+    {num: avg(list.map(m=>m.rating)).toFixed(1), lbl:'Средняя оценка'},
+    {num: sum('goals'), lbl:'Голы'},
+    {num: sum('assists'), lbl:'Ассисты'},
+    {num: sum('tackles'), lbl:'Отборы'},
+    {num: sum('losses')+sum('badpass')+sum('badtouch'), lbl:'Потери мяча'},
+    {num: avg(list.map(m=>m.behaviors.effort)).toFixed(1), lbl:'Ср. старание'},
+    {num: avg(list.map(m=>m.behaviors.team)).toFixed(1), lbl:'Ср. командность'},
+  ];
+  grid.innerHTML = cards.map(c=>`
+    <div class="stat-card"><div class="num">${c.num}</div><div class="lbl">${c.lbl}</div></div>
+  `).join('');
+
+  drawChart(list);
+}
+
+function drawChart(list){
+  const svg = document.getElementById('chartSvg');
+  if(list.length < 1){
+    svg.innerHTML = `<text x="150" y="60" text-anchor="middle" font-size="11" fill="#8D9AB5">Пока нет данных для графика</text>`;
+    return;
+  }
+  const w = 300, h = 120, pad = 14;
+  const xs = list.map((_,i)=> pad + i * ((w-2*pad)/Math.max(1,list.length-1)));
+  const ys = list.map(m => h - pad - (m.rating/10)*(h-2*pad));
+  let path = xs.map((x,i)=> `${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+  let dots = xs.map((x,i)=> `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="3.5" fill="#F5B942"/>`).join('');
+  let gridLines = '';
+  [0,2,4,6,8,10].forEach(v=>{
+    const y = h - pad - (v/10)*(h-2*pad);
+    gridLines += `<line x1="${pad}" y1="${y}" x2="${w-pad}" y2="${y}" stroke="rgba(255,255,255,.08)" stroke-width="1"/>`;
+  });
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#22D3A6"/>
+        <stop offset="1" stop-color="#7C5CFC"/>
+      </linearGradient>
+    </defs>
+    ${gridLines}<path d="${path}" fill="none" stroke="url(#lineGrad)" stroke-width="2.5"/>${dots}`;
+}
+
+// ---------- tabs ----------
+document.querySelectorAll('.tabbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+    document.getElementById('heroBlock').style.display = btn.dataset.view === 'new' ? 'flex' : 'none';
+    if(btn.dataset.view === 'history') renderHistory();
+    if(btn.dataset.view === 'stats') renderStats();
+  });
+});
+
+// ---------- init ----------
+(async function init(){
+  document.getElementById('f-date').value = todayStr();
+  renderMetrics();
+  renderBehaviors();
+  updateHero();
+  await loadMatches();
+  renderHistory();
+  renderStats();
+})();
+</script>
+</body>
+</html>
